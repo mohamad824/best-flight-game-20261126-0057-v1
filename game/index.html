@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DANGER ZONE — Carrier Fighter School</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+<script src="vendor/three.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <!-- ======= HUD (DOM overlay, glowing instruments) ======= -->
+  <div id="hud" class="hidden">
+    <div id="topbar">
+      <div class="tb-left">
+        <div id="mission-name">SORTIE 1 — RING RUN</div>
+        <div id="objective">Fly through all 8 rings before the clock runs out.</div>
+      </div>
+      <div class="tb-mid">
+        <div id="score-label">SCORE</div>
+        <div id="score">0</div>
+        <div id="chain">CHAIN ×1</div>
+      </div>
+      <div class="tb-right">
+        <div id="timer">TIME --:--</div>
+        <div id="winlose">WIN: finish the run &nbsp;·&nbsp; LOSE: fuel out / hull 0 / carrier lost</div>
+      </div>
+    </div>
+    <div id="roster">
+      <div class="roster-title">⚠ INCOMING BANDITS</div>
+      <div id="roster-list"></div>
+      <div class="roster-foot">CARRIER <span id="carrier-hp">100%</span></div>
+    </div>
+    <div id="tapes">
+      <div class="tape" id="tape-alt"><div class="tape-title">ALT FT</div><div class="tape-val" id="alt-val">0</div><div class="tape-bar"><div class="tape-fill" id="alt-fill"></div></div></div>
+      <div class="tape" id="tape-spd"><div class="tape-title">SPD KTS</div><div class="tape-val" id="spd-val">0</div><div class="tape-bar"><div class="tape-fill" id="spd-fill"></div></div></div>
+      <div class="tape" id="tape-hdg"><div class="tape-title">HDG</div><div class="tape-val" id="hdg-val">000°</div><div class="tape-bar"><div class="tape-fill" id="hdg-fill"></div></div></div>
+    </div>
+    <div id="gauges">
+      <div class="gauge"><span>FUEL</span><div class="gbar"><div id="fuel-fill" class="gfill fuel"></div></div><b id="fuel-val">100%</b></div>
+      <div class="gauge"><span>HULL</span><div class="gbar"><div id="hull-fill" class="gfill hull"></div></div><b id="hull-val">100%</b></div>
+      <div class="gauge"><span>G</span><div class="gbar"><div id="g-fill" class="gfill gforce"></div></div><b id="g-val">1.0 G</b></div>
+      <div class="gauge"><span>THR</span><div class="gbar"><div id="thr-fill" class="gfill thr"></div></div><b id="thr-val">55%</b></div>
+    </div>
+    <div id="acebar" class="hidden">
+      <div class="ace-name">☠ NIGHTHAWK — ACE DUEL · PHASE <span id="ace-phase">1</span>/3</div>
+      <div class="ace-hpbar"><div id="ace-hp-fill"></div></div>
+    </div>
+    <div id="upgrades-held"></div>
+    <div id="crosshair">+</div>
+    <div id="banner" class="hidden"></div>
+    <div id="chain-pop" class="hidden">CHAIN ×8!</div>
+    <div id="warn" class="hidden">⚠ STALL — THROTTLE UP ⚠</div>
+    <div id="hint">W/S throttle · ←/→ bank · ↑/↓ pitch · SPACE guns · SHIFT afterburner · C cockpit · M mute</div>
+  </div>
+  <!-- ======= TITLE SCREEN ======= -->
+  <div id="title" class="screen">
+    <div class="screen-inner">
+      <div class="kicker">VF-77 SUNSET FALCONS · USS AURORA (CVN-88)</div>
+      <h1>DANGER ZONE</h1>
+      <div class="subtitle">— CARRIER FIGHTER SCHOOL —</div>
+      <p class="tagline">Three sorties. One ace. Earn your wings at golden hour.</p>
+      <div class="cols">
+        <div class="col">
+          <h2>GOAL</h2>
+          <p>Fly 3 sorties and defeat the ace <b>NIGHTHAWK</b> in a 3-phase duel. Score big, keep your CHAIN alive, bring the jet home.</p>
+          <h2>WIN / LOSE</h2>
+          <p><b>WIN:</b> NIGHTHAWK shot down + carrier safe.<br><b>LOSE:</b> fuel empty, hull destroyed, or the carrier is overrun.</p>
+        </div>
+        <div class="col">
+          <h2>MISSIONS</h2>
+          <ol>
+            <li><b>1 · RING RUN</b> — 8 rings through the island canyon, on the clock.</li>
+            <li><b>2 · INTERCEPT</b> — down 6 bandits before they reach the carrier.</li>
+            <li><b>3 · CARRIER LANDING</b> — trap the wire on USS AURORA.</li>
+            <li><b>★ ACE DUEL</b> — NIGHTHAWK, 3 phases. No mercy.</li>
+          </ol>
+          <h2>CONTROLS</h2>
+          <p>W/S throttle · ←/→ bank &amp; turn · ↑/↓ pitch · SPACE guns · SHIFT afterburner · C cockpit view · P pause · M mute · mouse steers too</p>
+        </div>
+      </div>
+      <div class="pilots">PILOTS: <b>GHOST</b> (you) · wingmen <b>HAVOC</b> &amp; <b>COMET</b> · RIVAL: <b>NIGHTHAWK</b></div>
+      <button id="btn-fly" class="bigbtn">▶ LAUNCH — SORTIE 1</button>
+      <div class="foot">Low speed stalls. Hard turns bleed speed and build G. Fuel burns with throttle. Fly disciplined.</div>
+    </div>
+  </div>
+  <!-- ======= UPGRADE DRAFT ======= -->
+  <div id="upgrade" class="screen hidden">
+    <div class="screen-inner">
+      <div class="kicker" id="upgrade-kicker">SORTIE COMPLETE</div>
+      <h1 class="small">HANGAR — PICK 1 UPGRADE</h1>
+      <p class="tagline">Choose one. It stays with you for the rest of the run.</p>
+      <div id="upgrade-cards"></div>
+      <div class="foot">Press 1 / 2 / 3 or click a card.</div>
+    </div>
+  </div>
+  <!-- ======= RESULTS ======= -->
+  <div id="results" class="screen hidden">
+    <div class="screen-inner">
+      <div class="kicker" id="results-kicker">AFTER ACTION REPORT</div>
+      <h1 class="small" id="results-title">MISSION COMPLETE</h1>
+      <div id="grade">S</div>
+      <div id="results-stats"></div>
+      <button id="btn-again" class="bigbtn">↻ FLY AGAIN</button>
+      <div class="foot">VF-77 SUNSET FALCONS · USS AURORA (CVN-88) · DANGER ZONE</div>
+    </div>
+  </div>
+  <div id="paused" class="screen hidden"><div class="screen-inner"><h1 class="small">PAUSED</h1><p class="tagline">Press P to resume.</p></div></div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
